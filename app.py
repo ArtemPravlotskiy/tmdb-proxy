@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
 import requests
+import os
 
 app = Flask(__name__)
 
-TMDB_API_KEY = "your_tmdb_api_key"
+TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 
 @app.route("/proxy", methods=["GET"])
 def proxy():
