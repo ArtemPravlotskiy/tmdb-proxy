@@ -49,3 +49,8 @@ async def image_proxy(path: str | None = None):
         media_type=response.headers.get("Content-Type"),
         status_code=response.status_code
     )
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
