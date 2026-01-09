@@ -1,51 +1,37 @@
-from flask import Flask, request, jsonify
-#import requests
+from fastapi import FastAPI, HTTPException
+import httpx
 import os
+from fastapi.responses import Response
 
-app = Flask(__name__)
+app = FastAPI()
 
-#TMDB_API_KEY = os.getenv("TMDB_API_KEY")
+TMDB_API_KEY = os.getenv("TMDB_API_KEY")
+if not TMDB_API_KEY:
+    raise RuntimeError("TMDB_API_KEY is missing")
 
-'''def get_tmdb_api_key():
-    key = os.getenv("TMDB_API_KEY")
-    if not key:
-        raise ValueError("TMDB_API_KEY environment variable is not set.")
-    return key'''
 
-@app.route("/", methods=["GET"])
-def health_check():
-    """Возвращает простой успешный ответ для проверки работоспособности."""
-    return jsonify({
-        "status": "ok",
-        "service": "TMDB Proxy",
-        "version": "1.0"
-    }), 200
-
-'''@app.route("/proxy", methods=["GET"])
-def proxy():
-    endpoint = request.args.get("endpoint")
-    if not endpoint:
-        return jsonify({"error": "Missing endpoint"}), 400
-
+@app.get("/proxy")
+async def proxy(endpoint: str):
     url = f"https://api.themoviedb.org/3/{endpoint}"
-    params = request.args.to_dict()
-    params["api_key"] = TMDB_API_KEY
 
-    response = requests.get(url, params=params)
-    return jsonify(response.json())
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params={"api_key": TMDB_API_KEY})
 
-@app.route("/image", methods=["GET"])
-def image_proxy():
-    path = request.args.get("path")
-    if not path:
-        return jsonify({"error": "Missing path"}), 400
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
 
+    return response.json()
+
+
+@app.get("/image")
+async def image_proxy(path: str):
     url = f"https://image.tmdb.org/t/p/w500{path}"
-    response = requests.get(url, stream=True)
 
-    return response.content, response.status_code, {
-        "Content-Type": response.headers.get("Content-Type")
-    }'''
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
 
-#if __name__ == "__main__":
-#    app.run(host="0.0.0.0", port=5000)
+    return Response(
+        content=response.content,
+        media_type=response.headers.get("Content-Type"),
+        status_code=response.status_code
+    )
