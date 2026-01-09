@@ -1,16 +1,16 @@
 from flask import Flask, request, jsonify
-import requests
+#import requests
 import os
 
 app = Flask(__name__)
 
 #TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 
-def get_tmdb_api_key():
+'''def get_tmdb_api_key():
     key = os.getenv("TMDB_API_KEY")
     if not key:
         raise ValueError("TMDB_API_KEY environment variable is not set.")
-    return key
+    return key'''
 
 @app.route("/", methods=["GET"])
 def health_check():
@@ -21,7 +21,7 @@ def health_check():
         "version": "1.0"
     }), 200
 
-@app.route("/proxy", methods=["GET"])
+'''@app.route("/proxy", methods=["GET"])
 def proxy():
     endpoint = request.args.get("endpoint")
     if not endpoint:
@@ -45,7 +45,7 @@ def image_proxy():
 
     return response.content, response.status_code, {
         "Content-Type": response.headers.get("Content-Type")
-    }
+    }'''
 
 #if __name__ == "__main__":
 #    app.run(host="0.0.0.0", port=5000)
