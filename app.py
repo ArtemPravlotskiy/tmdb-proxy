@@ -6,6 +6,15 @@ app = Flask(__name__)
 
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 
+@app.route("/", methods=["GET"])
+def health_check():
+    """Возвращает простой успешный ответ для проверки работоспособности."""
+    return jsonify({
+        "status": "ok",
+        "service": "TMDB Proxy",
+        "version": "1.0"
+    }), 200
+
 @app.route("/proxy", methods=["GET"])
 def proxy():
     endpoint = request.args.get("endpoint")
