@@ -4,7 +4,13 @@ import os
 
 app = Flask(__name__)
 
-TMDB_API_KEY = os.getenv("TMDB_API_KEY")
+#TMDB_API_KEY = os.getenv("TMDB_API_KEY")
+
+def get_tmdb_api_key():
+    key = os.getenv("TMDB_API_KEY")
+    if not key:
+        raise ValueError("TMDB_API_KEY environment variable is not set.")
+    return key
 
 @app.route("/", methods=["GET"])
 def health_check():
