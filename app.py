@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import Response
 import httpx
 import os
-from fastapi.responses import Response
 
 app = FastAPI()
 
@@ -11,11 +11,19 @@ if not TMDB_API_KEY:
 
 
 @app.get("/proxy")
-async def proxy(endpoint: str):
-    url = f"https://api.themoviedb.org/3/{endpoint}"
+async def proxy(request: Request, endpoint: str | None = None):
+    if not endpoint:
+        raise HTTPException(status_code=400, detail="Missing endpoint parameter")
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params={"api_key": TMDB_API_KEY})
+    url = f"https://api.themoviedb.org/3/{endpoint}"
+    params = dict(request.query_params)
+    params["api_key"] = TMDB_API_KEY
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params)
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=str(e))
 
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.text)
@@ -24,11 +32,17 @@ async def proxy(endpoint: str):
 
 
 @app.get("/image")
-async def image_proxy(path: str):
+async def image_proxy(path: str | None = None):
+    if not path:
+        raise HTTPException(status_code=400, detail="Missing path parameter")
+
     url = f"https://image.tmdb.org/t/p/w500{path}"
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=str(e))
 
     return Response(
         content=response.content,
